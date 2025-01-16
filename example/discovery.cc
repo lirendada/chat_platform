@@ -12,12 +12,12 @@ DEFINE_string(value, "127.0.0.1:8080", "当前实例的外部访问地址");
 
 void online(const std::string& key, const std::string& value)
 {
-    LOG_DEBUG("新增键值对：{}-{}", key, value);
+    LOG_DEBUG("上线服务：{}-{}", key, value);
 }
 
 void offline(const std::string& key, const std::string& value)
 {
-    LOG_DEBUG("删除键值对：{}-{}", key, value);
+    LOG_DEBUG("下线服务：{}-{}", key, value);
 }
 
 int main(int argc, char* argv[])

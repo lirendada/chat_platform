@@ -91,12 +91,12 @@ private:
             if(es.event_type() == etcd::Event::EventType::PUT)
             {
                 if(_put_cb) _put_cb(es.kv().key(), es.kv().as_string());
-                LOG_DEBUG("新增键值对：{}-{}", es.kv().key(), es.kv().as_string());
+                LOG_DEBUG("新增服务：{}-{}", es.kv().key(), es.kv().as_string());
             }
             else if(es.event_type() == etcd::Event::EventType::DELETE_)
             {
-                if(_put_cb) _put_cb(es.prev_kv().key(), es.prev_kv().as_string());
-                LOG_DEBUG("删除键值对：{}-{}", es.prev_kv().key(), es.prev_kv().as_string());
+                if(_put_cb) _del_cb(es.prev_kv().key(), es.prev_kv().as_string());
+                LOG_DEBUG("删除服务：{}-{}", es.prev_kv().key(), es.prev_kv().as_string());
             }
         }
     }
