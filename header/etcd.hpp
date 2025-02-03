@@ -1,3 +1,4 @@
+#pragma once
 #include <etcd/Client.hpp>
 #include <etcd/KeepAlive.hpp>
 #include <etcd/Response.hpp>
