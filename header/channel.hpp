@@ -107,7 +107,7 @@ public:
         _follow_services.insert(service_name);
     }
 
-    // 服务上线时调用的回调接口：为服务添加主机地址（即etcd.hpp中Discovery类的put_cb对象）
+    // 服务上线时调用的回调接口（即etcd.hpp中Discovery类的put_cb对象）：为服务添加主机地址
     void online(const std::string& instance_name, const std::string& host)
     {
         std::string service_name = instance_to_service(instance_name);
@@ -135,7 +135,7 @@ public:
         LOG_DEBUG("{}-{}服务上线新节点，进行添加管理！", service_name, host);
     }
 
-    // 服务下线时调用的回调接口，删除服务节点（即etcd.hpp中Discovery类的del_cb对象）
+    // 服务下线时调用的回调接口（即etcd.hpp中Discovery类的del_cb对象）：删除服务节点
     void offline(const std::string& instance_name, const std::string& host)
     {
         std::string service_name = instance_to_service(instance_name);

@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
     settings.logging_dest = logging::LoggingDestination::LOG_TO_NONE;
     logging::InitLogging(settings);
 
-    // 2. 创建服务器对象
+    // 2. 创建rpc服务器对象
     brpc::Server server;
 
     // 3. 向服务器对象中新增EchoService服务（局部变量，不需要去服务器去清除服务对象）
