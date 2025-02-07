@@ -1,0 +1,18 @@
+# Build two executables: one with no macros defined and one with
+# _POSIX_C_SOURCE defined.
+#
+# _POSIX_C_SOURCE and similar macros can affect whether or not BYTE_ORDER,
+# BIG_ENDIAN, and LITTLE_ENDIAN are defined. Only do _POSIX_C_SOURCE here
+# because the others are used much less frequently.
+#
+
+./: exe{driver}: c{driver}
+
+./: exe{driver-posix}: include = ($c.target.system != 'win32-msvc')
+
+exe{driver-posix}: obje{driver-posix}: c{driver}
+
+c.poptions += "-I$out_base"
+obje{driver-posix}: c.poptions += -D_POSIX_C_SOURCE
+
+./: h{config}: in{config}

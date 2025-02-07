@@ -1,0 +1,761 @@
+#!/bin/sh
+
+# file      : build.sh.in
+# license   : MIT; see accompanying LICENSE file
+
+usage="Usage: $0 [-h|--help] [<options>] [--] <c++-compiler> [<compile-options>] [-- <link-options>]"
+
+# Package repository URL (or path).
+#
+if test -z "$BUILD2_REPO"; then
+  BUILD2_REPO="https://pkg.cppget.org/1/alpha"
+fi
+
+# Package versions.
+#
+build2_ver="0.17.0"
+bpkg_ver="0.17.0"
+bdep_ver="0.17.0"
+
+# Standard modules comma-separated list and versions.
+#
+# NOTE: we currently print the list as a single line and will need to somehow
+# change that when it becomes too long.
+#
+standard_modules="autoconf, kconfig"
+autoconf_ver="0.3.0"
+kconfig_ver="0.3.0"
+
+# The bpkg configuration directory.
+#
+cver="0.17"
+cdir="build2-toolchain-$cver"
+
+diag ()
+{
+  echo "$*" 1>&2
+}
+
+# Note that this function will execute a command with arguments that contain
+# spaces but it will not print them as quoted (and neither does set -x).
+#
+run ()
+{
+  diag "+ $@"
+  "$@"
+  if test "$?" -ne "0"; then
+    exit 1
+  fi
+}
+
+owd="$(pwd)"
+
+local=
+bpkg_install=true
+bdep_install=true
+modules="$standard_modules"
+system=
+private=
+idir=
+exe_prefix=
+exe_suffix=
+stage_suffix="-stage"
+jobs=
+sudo=
+trust=
+timeout=
+make=
+make_options=
+verbose=
+
+while test $# -ne 0; do
+  case "$1" in
+    -h|--help)
+      diag
+      diag "$usage"
+      diag "Options:"
+      diag "  --local               Don't build from packages, only from local source."
+      diag "  --no-bpkg             Don't install bpkg nor bdep (requires --local)."
+      diag "  --no-bdep             Don't install bdep."
+      diag "  --no-modules          Don't install standard build system modules."
+      diag "  --modules <list>      Install only specified standard build system modules."
+      diag "  --install-dir <dir>   Alternative installation directory."
+      diag "  --system <list>       Use system-installed versions of specified dependencies."
+      diag "  --exe-prefix <pfx>    Toolchain executables name prefix."
+      diag "  --exe-suffix <sfx>    Toolchain executables name suffix."
+      diag "  --stage-suffix <sfx>  Staged executables name suffix ('-stage' by default)."
+      diag "  --sudo <prog>         Optional sudo program to use (pass false to disable)."
+      diag "  --private             Install shared libraries into private subdirectory."
+      diag "  --jobs|-j <num>       Number of jobs to perform in parallel."
+      diag "  --repo <loc>          Alternative package repository location."
+      diag "  --trust <fp>          Repository certificate fingerprint to trust."
+      diag "  --timeout <sec>       Network operations timeout in seconds."
+      diag "  --make <arg>          Bootstrap using GNU make instead of script."
+      diag "  --verbose <level>     Diagnostics verbosity level between 0 and 6."
+      diag
+      diag "By default the script will install into /usr/local using sudo(1). To"
+      diag "enable private library subdirectories and/or use sudo for a custom"
+      diag "installation location, you need to specify --private and/or --sudo"
+      diag "explicitly, for example:"
+      diag
+      diag "$0 --install-dir /opt/build2 --sudo sudo g++"
+      diag
+      diag "If --jobs|-j is unspecified, then the bootstrap step is performed"
+      diag "serially with the rest of the process using the number of available"
+      diag "hardware threads."
+      diag
+      diag "The --trust option recognizes two special values: 'yes' (trust"
+      diag "everything) and 'no' (trust nothing)."
+      diag
+      diag "The --make option can be used to bootstrap using GNU make. The"
+      diag "first --make value should specify the make executable optionally"
+      diag "followed by additional make options, for example:"
+      diag
+      diag "$0 --make make --make -j8 g++"
+      diag
+      diag "If --jobs|-j is specified, then its value is passed to make before"
+      diag "any additional options."
+      diag
+      diag "If specified, <compile-options> override the default (-O3) compile"
+      diag "options (config.cc.coptions) in the bpkg configuration used to build"
+      diag "and install the final toolchain. For example, to build with the debug"
+      diag "information (and without optimization):"
+      diag
+      diag "$0 g++ -g"
+      diag
+      diag "Use --system <list> to specify a comma-separated list of dependencies"
+      diag "to use from the system rather than building them from source. Currently,"
+      diag "only libsqlite3 and libpkgconf can be specified with this option and"
+      diag "using either from the system will likely result in limited functionality."
+      diag "For example:"
+      diag
+      diag "$0 --system libsqlite3,libpkgconf g++"
+      diag
+      diag "The script by default installs the following standard build system"
+      diag "modules:"
+      diag
+      diag "$standard_modules"
+      diag
+      diag "Use --no-modules to suppress installing build system modules or"
+      diag "--modules <list> to specify a comma-separated subset to install."
+      diag
+      diag "See the BOOTSTRAP-UNIX file for details."
+      diag
+      exit 0
+      ;;
+    --local)
+      local=true
+      shift
+      ;;
+    --no-bpkg)
+      bpkg_install=
+      shift
+      ;;
+    --no-bdep)
+      bdep_install=
+      shift
+      ;;
+    --no-modules)
+      modules=
+      shift
+      ;;
+    --modules)
+      shift
+      modules="$1"
+      shift
+      ;;
+    --system)
+      shift
+      system="$1"
+      shift
+      ;;
+    --private)
+      private=config.install.private=build2
+      shift
+      ;;
+    --install-dir)
+      shift
+      if test $# -eq 0; then
+        diag "error: installation directory expected after --install-dir"
+        diag "$usage"
+        exit 1
+      fi
+      idir="$1"
+      shift
+      ;;
+    --exe-prefix)
+      shift
+      if test $# -eq 0; then
+        diag "error: executables name prefix expected after --exe-prefix"
+        diag "$usage"
+        exit 1
+      fi
+      exe_prefix="$1"
+      shift
+      ;;
+    --exe-suffix)
+      shift
+      if test $# -eq 0; then
+        diag "error: executables name suffix expected after --exe-suffix"
+        diag "$usage"
+        exit 1
+      fi
+      exe_suffix="$1"
+      shift
+      ;;
+    --stage-suffix)
+      shift
+      if test $# -eq 0; then
+        diag "error: staged executables name suffix expected after --stage-suffix"
+        diag "$usage"
+        exit 1
+      fi
+      stage_suffix="$1"
+      shift
+      ;;
+    -j|--jobs)
+      shift
+      if test $# -eq 0; then
+        diag "error: number of jobs expected after --jobs|-j"
+        diag "$usage"
+        exit 1
+      fi
+      jobs="-j $1"
+      shift
+      ;;
+    --sudo)
+      shift
+      if test $# -eq 0; then
+        diag "error: sudo program expected after --sudo"
+        diag "$usage"
+        exit 1
+      fi
+      sudo="$1"
+      shift
+      ;;
+    --repo)
+      shift
+      if test $# -eq 0; then
+        diag "error: repository location expected after --repo"
+        diag "$usage"
+        exit 1
+      fi
+      BUILD2_REPO="$1"
+      shift
+      ;;
+    --trust)
+      shift
+      if test $# -eq 0; then
+        diag "error: certificate fingerprint expected after --trust"
+        diag "$usage"
+        exit 1
+      fi
+      trust="$1"
+      shift
+      ;;
+    --timeout)
+      shift
+      if test $# -eq 0; then
+        diag "error: value in seconds expected after --timeout"
+        diag "$usage"
+        exit 1
+      fi
+      timeout="$1"
+      shift
+      ;;
+    --make)
+      shift
+      if test $# -eq 0; then
+        diag "error: argument expected after --make"
+        diag "$usage"
+        exit 1
+      fi
+      if test -z "$make"; then
+        make="$1"
+      else
+        make_options="$make_options $1"
+      fi
+      shift
+      ;;
+    --verbose)
+      shift
+      if test $# -eq 0; then
+        diag "error: diagnostics level between 0 and 6 expected after --verbose"
+        diag "$usage"
+        exit 1
+      fi
+      verbose="$1"
+      shift
+      ;;
+    --)
+      shift
+      break
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
+
+# Compiler.
+#
+if test $# -eq 0; then
+  diag "error: compiler executable expected"
+  diag "$usage"
+  exit 1
+else
+  cxx="$1"
+  shift
+fi
+
+# Compile and link options.
+#
+compile_ops=
+link_ops=
+
+while test $# -ne 0; do
+  if test "$1" != "--"; then
+    compile_ops="$compile_ops $1"
+    shift
+  else
+    shift
+    break
+  fi
+done
+
+while test $# -ne 0; do
+  link_ops="$link_ops $1"
+  shift
+done
+
+if test -z "$compile_ops"; then
+  compile_ops=-O3
+fi
+
+if test -z "$link_ops"; then
+  link_ops="[null]"
+fi
+
+# Merge jobs and make_options into make.
+#
+if test -n "$make"; then
+  if test -n "$jobs"; then
+    make="$make $jobs"
+  fi
+
+  if test -n "$make_options"; then
+    make="$make$make_options" # Already has leading space.
+  fi
+fi
+
+# If --no-bpkg is specified, then we require --local to also be specified
+# since it won't be possible to build things from packages without bpkg. Also
+# imply --no-bdep in this case, since bdep is pretty much useless without
+# bpkg.
+#
+if test -z "$bpkg_install"; then
+  if test -z "$local"; then
+    diag "error: --no-bpkg can only be used for local installation"
+    diag "  info: additionally specify --local"
+    exit 1
+  fi
+
+  bdep_install=
+fi
+
+module_version () # <name>
+{
+  eval "echo \$$1_ver"
+}
+
+# Convert the comma-separated modules list into a space-separated list.
+#
+module_list="$(echo "$modules" | sed 's/,/ /g')"
+
+for m in $module_list; do
+  if test -z "$(module_version "$m")"; then
+    diag "error: unknown standard build system module '$m'"
+    diag "  info: available standard modules: $standard_modules"
+    exit 1
+  fi
+done
+
+# Convert the comma-separated list of system dependencies into a
+# space-separated list.
+#
+system_list="$(echo "$system" | sed 's/,/ /g')"
+
+# If any dependencies are specified to be used from the system, then translate
+# them to the correspinding config.* variables. To keep things simple, we will
+# only support system dependencies for local installations.
+#
+# Note that the build2 driver bootstrapped at stage 1 doesn't read .pc
+# files. Thus, for the bootstrap stage 2 command it is assumed that the
+# headers and libraries of the system dependencies can be found by the
+# compiler and linker at the standard locations. That, however, is not the
+# case for libpkgconf. Thus, if specifying libpkgconf as a system dependency
+# also specify its headers location via, for example, the CPATH environment
+# variable:
+#
+# $ CPATH=/usr/include/pkgconf ./build.sh --local --system libpkgconf g++
+#
+bootstrap_system_config=
+system_config=
+
+for d in $system_list; do
+
+  if test -z "$local"; then
+    diag "error: '--system $d' can only be used for local installation"
+    diag "  info: additionally specify --local"
+    exit 1
+  fi
+
+  # Note: prefix system_config variables with project directories to avoid the
+  # 'dropping no longer used ...' warnings.
+  #
+  case "$d" in
+    libsqlite3)
+      system_config="$system_config libbutl/config.libbutl.system_libsqlite3=true"
+      ;;
+    libpkgconf)
+      bootstrap_system_config="config.build2.libpkgconf=true"
+      system_config="$system_config build2/config.build2.libpkgconf=true"
+      ;;
+    *)
+      diag "error: unknown system dependency '$d'"
+      exit 1
+      ;;
+  esac
+done
+
+# If the installation directory is unspecified, then assume it is /usr/local.
+# Otherwise, if it is a relative path, then convert it to an absolute path,
+# unless the realpath program is not present on the system or doesn't
+# recognize any of the options we pass, in which case fail, advising to
+# specify an absolute installation directory.
+#
+if test -z "$idir"; then
+  idir=/usr/local
+
+  # Only use default sudo for the default installation directory and only if
+  # it wasn't specified by the user.
+  #
+  if test -z "$sudo"; then
+    sudo="sudo"
+  fi
+elif test -n "$(echo "$idir" | sed -n 's#^[^/].*$#true#p')"; then
+
+  if ! command -v realpath >/dev/null 2>&1; then
+    diag "error: unable to execute realpath: command not found"
+    diag "  info: specify absolute installation directory path"
+    exit 1
+  fi
+
+  # Don't resolve symlinks and allow non-existent path components.
+  #
+  if ! idir="$(realpath -s -m "$idir" 2>/dev/null)"; then
+    diag "error: realpath does not recognize -s -m"
+    diag "  info: specify absolute installation directory path"
+    exit 1
+  fi
+fi
+
+if test "$sudo" = false; then
+  sudo=
+fi
+
+# Derive the to be installed executables names based on --exe-{prefix,suffix}.
+# Unless the installation is local, also derive the staged executables names
+# based on --stage-suffix and verify that they don't clash with existing
+# filesystem entries as well as the executables being installed.
+#
+b="${exe_prefix}b$exe_suffix"
+bpkg="${exe_prefix}bpkg$exe_suffix"
+bdep="${exe_prefix}bdep$exe_suffix"
+
+if test -z "$local"; then
+  b_stage="b$stage_suffix"
+  bpkg_stage="bpkg$stage_suffix"
+
+  if test -e "$idir/bin/$b_stage"; then
+    diag "error: staged executable name '$b_stage' clashes with existing $idir/bin/$b_stage"
+    diag "  info: specify alternative staged executables name suffix with --stage-suffix"
+    exit 1
+  fi
+
+  if test -e "$idir/bin/$bpkg_stage"; then
+    diag "error: staged executable name '$bpkg_stage' clashes with existing $idir/bin/$bpkg_stage"
+    diag "  info: specify alternative staged executables name suffix with --stage-suffix"
+    exit 1
+  fi
+
+  if test "$stage_suffix" = "$exe_suffix" -a -z "$exe_prefix"; then
+    diag "error: suffix '$exe_suffix' is used for both final and staged executables"
+    diag "  info: specify alternative staged executables name suffix with --stage-suffix"
+    exit 1
+  fi
+fi
+
+if test -f build/config.build; then
+  diag "error: current directory already configured, start with clean source"
+  exit 1
+fi
+
+if test -z "$local" -a -d "../$cdir"; then
+  diag "error: ../$cdir/ bpkg configuration directory already exists, remove it"
+  exit 1
+fi
+
+# Add $idir/bin to PATH in case it is not already there.
+#
+PATH="$idir/bin:$PATH"
+export PATH
+
+sys="$(build2/config.guess | sed -n 's/^[^-]*-[^-]*-\(.*\)$/\1/p')"
+
+case "$sys" in
+  mingw32 | mingw64 | msys | msys2 | cygwin)
+    conf_rpath="[null]"
+    conf_rpath_stage="[null]"
+    conf_sudo="[null]"
+    ;;
+  *)
+    if test -n "$private"; then
+      conf_rpath="$idir/lib/build2"
+    else
+      conf_rpath="$idir/lib"
+    fi
+
+    conf_rpath_stage="$idir/lib"
+
+    if test -n "$sudo"; then
+      conf_sudo="$sudo"
+    else
+      conf_sudo="[null]"
+    fi
+    ;;
+esac
+
+# We don't have arrays in POSIX shell but we should be ok as long as none of
+# the configuration and option values contain spaces. Note also that the
+# expansion must be unquoted.
+#
+conf_exe_affixes=
+
+if test -n "$exe_prefix"; then
+  conf_exe_affixes="config.bin.exe.prefix=$exe_prefix"
+fi
+
+if test -n "$exe_suffix"; then
+  conf_exe_affixes="$conf_exe_affixes config.bin.exe.suffix=$exe_suffix"
+fi
+
+bpkg_fetch_ops=
+bpkg_build_ops=
+
+if test -n "$timeout"; then
+  bpkg_fetch_ops="--fetch-timeout $timeout"
+  bpkg_build_ops="--fetch-timeout $timeout"
+fi
+
+if test "$trust" = "yes"; then
+  bpkg_fetch_ops="$bpkg_fetch_ops --trust-yes"
+elif test "$trust" = "no"; then
+  bpkg_fetch_ops="$bpkg_fetch_ops --trust-no"
+elif test -n "$trust"; then
+  bpkg_fetch_ops="$bpkg_fetch_ops --trust $trust"
+fi
+
+if test -n "$verbose"; then
+  verbose="--verbose $verbose"
+fi
+
+# Suppress loading of default options files.
+#
+BUILD2_DEF_OPT="0"
+export BUILD2_DEF_OPT
+
+BPKG_DEF_OPT="0"
+export BPKG_DEF_OPT
+
+BDEP_DEF_OPT="0"
+export BDEP_DEF_OPT
+
+# Bootstrap, stage 1.
+#
+# Note: disable all warnings since we cannot do anything more granular during
+# bootstrap stage 1.
+#
+run cd build2
+if test -z "$make"; then
+  run ./bootstrap.sh "$cxx" -w
+else
+  run $make -f ./bootstrap.gmake "CXX=$cxx" CXXFLAGS=-w
+fi
+run build2/b-boot --version
+
+# Bootstrap, stage 2.
+#
+run build2/b-boot $verbose $jobs config.cxx="$cxx" config.bin.lib=static $bootstrap_system_config build2/exe{b}
+mv build2/b build2/b-boot
+run build2/b-boot --version
+
+run cd ..
+
+# Local installation early return.
+#
+if test "$local" = true; then
+
+  run build2/build2/b-boot $verbose configure \
+config.config.hermetic=true \
+config.cxx="$cxx" \
+config.cc.coptions="${compile_ops# }" \
+config.cc.loptions="${link_ops# }" \
+config.bin.lib=shared \
+config.bin.rpath="$conf_rpath" \
+config.install.root="$idir" \
+config.install.sudo="$conf_sudo" \
+$conf_exe_affixes \
+$private \
+$system_config
+
+  # Install toolchain.
+  #
+  projects="build2/"
+
+  if test "$bpkg_install" = true; then
+    projects="$projects bpkg/"
+  fi
+
+  if test "$bdep_install" = true; then
+    projects="$projects bdep/"
+  fi
+
+  run build2/build2/b-boot $verbose $jobs install: $projects
+
+  run command -v "$b"
+  run "$b" --version
+
+  if test "$bpkg_install" = true; then
+    run command -v "$bpkg"
+    run "$bpkg" --version
+  fi
+
+  if test "$bdep_install" = true; then
+    run command -v "$bdep"
+    run "$bdep" --version
+  fi
+
+  # Install modules.
+  #
+  projects=
+  tests=
+
+  for m in $module_list; do
+    projects="$projects libbuild2-$m/"
+    tests="$tests tests/libbuild2-$m-tests/"
+  done
+
+  if test -n "$projects"; then
+    run "$b" $verbose $jobs install: '!config.install.scope=project' $projects
+    run "$b" $verbose noop: $tests
+  fi
+
+  diag
+  diag "Toolchain installation: $idir/bin"
+  diag "Build configuration:    $owd"
+  diag
+
+  exit 0
+fi
+
+# Build and stage the build system and the package manager.
+#
+run build2/build2/b-boot $verbose configure \
+config.cxx="$cxx" \
+config.bin.lib=shared \
+config.bin.suffix="$stage_suffix" \
+config.bin.rpath="$conf_rpath_stage" \
+config.install.root="$idir" \
+config.install.data_root=root/stage \
+config.install.sudo="$conf_sudo"
+
+run build2/build2/b-boot $verbose $jobs install: build2/ bpkg/
+
+run command -v "$b_stage"
+run "$b_stage" --version
+
+run command -v "$bpkg_stage"
+run "$bpkg_stage" --version
+
+# Build the entire toolchain from packages.
+#
+run cd ..
+run mkdir "$cdir"
+run cd "$cdir"
+cdir="$(pwd)" # Save full path for later.
+
+run "$bpkg_stage" $verbose create \
+cc \
+config.config.hermetic=true \
+config.cxx="$cxx" \
+config.cc.coptions="${compile_ops# }" \
+config.cc.loptions="${link_ops# }" \
+config.bin.lib=shared \
+config.bin.rpath="$conf_rpath" \
+config.install.root="$idir" \
+config.install.sudo="$conf_sudo" \
+$conf_exe_affixes \
+$private
+
+packages="build2/$build2_ver bpkg/$bpkg_ver"
+
+if test "$bdep_install" = true; then
+  packages="$packages bdep/$bdep_ver"
+fi
+
+run "$bpkg_stage" $verbose add "$BUILD2_REPO"
+run "$bpkg_stage" $verbose $bpkg_fetch_ops fetch
+run "$bpkg_stage" $verbose $jobs $bpkg_build_ops build --for install --yes --plan= $packages
+run "$bpkg_stage" $verbose $jobs install --all
+
+run command -v "$b"
+run "$b" --version
+
+run command -v "$bpkg"
+run "$bpkg" --version
+
+if test "$bdep_install" = true; then
+  run command -v "$bdep"
+  run "$bdep" --version
+fi
+
+# Build, install, and verify the build system modules.
+#
+packages=
+tests=
+
+for m in $module_list; do
+  packages="$packages libbuild2-$m/$(module_version "$m")"
+  tests="$tests tests/libbuild2-$m-tests/"
+done
+
+if test -n "$packages"; then
+  run "$bpkg" $verbose $jobs $bpkg_build_ops build --for install $packages
+  run "$bpkg" $verbose $jobs install '!config.install.scope=project' --all-pattern=libbuild2-*
+fi
+
+run cd "$owd"
+
+if test -n "$tests"; then
+  run "$b" $verbose noop: $tests
+fi
+
+# Clean up stage.
+#
+run "$b" $verbose $jobs uninstall: build2/ bpkg/
+
+diag
+diag "Toolchain installation: $idir/bin"
+diag "Build configuration:    $cdir"
+diag
