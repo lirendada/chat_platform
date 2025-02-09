@@ -1,5 +1,0 @@
-# @@ Should we be able to do just test = $build.path?
-#
-testscript{*}: test = $recall($build.path)
-
-./: testscript

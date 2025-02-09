@@ -1,6 +1,0 @@
-project = libbuild2-autoconf-tests
-
-using version
-using config
-using test
-using dist
