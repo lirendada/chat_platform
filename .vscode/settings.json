@@ -70,7 +70,25 @@
         "cinttypes": "cpp",
         "typeindex": "cpp",
         "typeinfo": "cpp",
-        "variant": "cpp"
+        "variant": "cpp",
+        "csetjmp": "cpp",
+        "csignal": "cpp",
+        "strstream": "cpp",
+        "barrier": "cpp",
+        "cfenv": "cpp",
+        "charconv": "cpp",
+        "codecvt": "cpp",
+        "coroutine": "cpp",
+        "cuchar": "cpp",
+        "forward_list": "cpp",
+        "source_location": "cpp",
+        "latch": "cpp",
+        "ranges": "cpp",
+        "scoped_allocator": "cpp",
+        "shared_mutex": "cpp",
+        "span": "cpp",
+        "syncstream": "cpp",
+        "valarray": "cpp"
     },
     "cmake.sourceDirectory": "/home/liren/chat_platform/es/elasticlient/external/jsoncpp"
 }
