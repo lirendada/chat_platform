@@ -98,7 +98,7 @@ struct classes_student {
 };
 
 // 查询所有学生姓名，外部调用时传入的过滤条件
-#pragma db view query("select name from Student" + (?))  // 查询语句与外部传入的过滤条件拼接
+#pragma db view query("select name from Student where" + (?))  // 查询语句与外部传入的过滤条件拼接
 struct all_name {
     // 映射查询结果中的学生姓名字段
     std::string name;

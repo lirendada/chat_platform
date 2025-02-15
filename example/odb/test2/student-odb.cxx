@@ -1651,11 +1651,11 @@ namespace odb
     r += "FROM `Student`";
 
     r += " LEFT JOIN `Classes` AS `classes` ON";
-    // From student.hxx:58:17
+    // From student.hxx:80:17
     r += query_columns::Student::classes_id == query_columns::classes::id;
 
     query_base_type c (
-      // From student.hxx:59:17
+      // From student.hxx:81:17
       (q.empty () ? query_base_type::true_expr : q));
 
     c.optimize ();
@@ -1788,8 +1788,8 @@ namespace odb
   query_statement (const query_base_type& q)
   {
     query_base_type r (
-      // From student.hxx:75:17
-      "select name from Student" + (q.empty () ? query_base_type::true_expr : q));
+      // From student.hxx:101:17
+      "select name from Student where" + (q.empty () ? query_base_type::true_expr : q));
     return r;
   }
 
