@@ -2,6 +2,8 @@
 #include "../../../header/logger.hpp"
 #include <gflags/gflags.h>
 
+using namespace liren;
+
 DEFINE_string(user, "root", "rabbitmq访问用户名");
 DEFINE_string(pswd, "123456", "rabbitmq访问密码");
 DEFINE_string(host, "127.0.0.1:5672", "rabbitmq服务器地址信息 host:port");

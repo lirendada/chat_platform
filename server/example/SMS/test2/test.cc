@@ -1,8 +1,8 @@
 #include "../../../header/dms.hpp"
 #include "gflags/gflags.h"
-
-DEFINE_string(key_id, "LTAI5t9kmjtWSZQ4mvqTaW9g", "平台访问密钥ID");
-DEFINE_string(key_secret, "VYkXgQO679Azxq7EY4n4hNcOQeobqN", "平台访问密钥");
+using namespace liren;
+DEFINE_string(key_id, "LTAI5tGrJuae6eAfHmi9jiyg", "平台访问密钥ID");
+DEFINE_string(key_secret, "hEdQhNgyEw7io6GvkTtz4y0VRnnnJv", "平台访问密钥");
 
 DEFINE_bool(run_mode, false, "程序的运行模式，false-调试； true-发布；");
 DEFINE_string(log_file, "", "发布模式下，用于指定日志的输出文件");
@@ -14,6 +14,6 @@ int main(int argc, char *argv[])
     init_logger(FLAGS_run_mode, FLAGS_log_file, FLAGS_log_level);
 
     DMSClient client(FLAGS_key_id, FLAGS_key_secret);
-    client.send("19875403784", "1234");
+    client.send("18063551124", "1234");
     return 0;
 }
