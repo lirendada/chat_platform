@@ -3,6 +3,7 @@
 #include "logger.hpp"
 
 namespace liren {
+    // ASRClient 类封装了百度语音识别 SDK 的接口
     class ASRClient 
     {
     public:
@@ -16,6 +17,7 @@ namespace liren {
 
         std::string recognize(const std::string &speech_data, std::string &err)
         {
+            // 基于语音识别 sdk 进行语音识别，获取识别后的文本内容
             Json::Value result = _client.recognize(speech_data, "pcm", 16000, aip::null);
             if (result["err_no"].asInt() != 0) {
                 LOG_ERROR("语音识别失败：{}", result["err_msg"].asString());

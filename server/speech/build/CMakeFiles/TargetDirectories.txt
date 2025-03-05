@@ -1,8 +1,0 @@
-/home/liren/chat_platform/server/speech/build/CMakeFiles/speech_server.dir
-/home/liren/chat_platform/server/speech/build/CMakeFiles/speech_client.dir
-/home/liren/chat_platform/server/speech/build/CMakeFiles/edit_cache.dir
-/home/liren/chat_platform/server/speech/build/CMakeFiles/rebuild_cache.dir
-/home/liren/chat_platform/server/speech/build/CMakeFiles/list_install_components.dir
-/home/liren/chat_platform/server/speech/build/CMakeFiles/install.dir
-/home/liren/chat_platform/server/speech/build/CMakeFiles/install/local.dir
-/home/liren/chat_platform/server/speech/build/CMakeFiles/install/strip.dir

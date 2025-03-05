@@ -22,7 +22,6 @@ int main(int argc, char *argv[])
     google::ParseCommandLineFlags(&argc, &argv, true);
     liren::init_logger(FLAGS_run_mode, FLAGS_log_file, FLAGS_log_level);
 
-    
     // 1. 先构造Rpc信道管理对象
     auto sm = std::make_shared<liren::ServiceManager>();
     sm->declared(FLAGS_speech_service);

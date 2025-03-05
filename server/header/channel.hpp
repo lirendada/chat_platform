@@ -30,7 +30,7 @@ namespace liren {
             options.protocol = "baidu_std";
             int ret = channel->Init(host.c_str(), &options);
             if(ret != 0) {
-                LOG_ERROR("初始化{}-{}信道失败！", _service_name, host);
+                LOG_ERROR("初始化 {}-{} 信道失败！", _service_name, host);
                 return;
             }
 
@@ -47,7 +47,7 @@ namespace liren {
             auto it = _hosts.find(host);
             if(it == _hosts.end())
             {
-                LOG_WARN("删除{}-{}信道失败，没有找到该信道！", _service_name, host);
+                LOG_WARN("删除 {}-{} 信道失败，没有找到该信道！", _service_name, host);
                 return;
             }
 
@@ -69,9 +69,8 @@ namespace liren {
                 LOG_ERROR("当前无信道可用，已为你创建新信道");
                 return channel_ptr();
             }
-            auto it = _channels[_index];
-            _index = (_index + 1) % _channels.size();
-            return it;
+            int32_t idx = _index++ % _channels.size();
+            return _channels[idx];
         }
     private:
         std::mutex _mtx;
@@ -94,7 +93,7 @@ namespace liren {
             auto it = _services.find(service_name);
             if(it == _services.end())
             {
-                LOG_ERROR("没有提供{}服务的节点", service_name);
+                LOG_ERROR("没有提供 {} 服务的节点", service_name);
                 return ChannelManager::channel_ptr();
             }
             return it->second->get();
@@ -117,7 +116,7 @@ namespace liren {
                 auto fit = _follow_services.find(service_name);
                 if(fit == _follow_services.end())
                 {
-                    LOG_DEBUG("{}-{}服务上线了，但是当前并不关心！\n", service_name, host);
+                    LOG_DEBUG("{}-{} 服务上线了，但是当前并不关心！\n", service_name, host);
                     return;
                 }
 
@@ -131,8 +130,13 @@ namespace liren {
                 else
                     service = it->second;
             }
+            if (!service) 
+            {
+                LOG_ERROR("新增 {} 服务管理节点失败！", service_name);
+                return ;
+            }
             service->append(host);
-            LOG_DEBUG("{}-{}服务上线新节点，进行添加管理！", service_name, host);
+            LOG_DEBUG("{}-{} 服务上线新节点，进行添加管理！", service_name, host);
         }
 
         // 服务下线时调用的回调接口（即etcd.hpp中Discovery类的del_cb对象）：删除服务节点
@@ -145,7 +149,7 @@ namespace liren {
                 auto fit = _follow_services.find(service_name);
                 if(fit == _follow_services.end())
                 {
-                    LOG_DEBUG("{}-{}服务下线了，但是当前并不关心！", service_name, host);
+                    LOG_DEBUG("{}-{} 服务下线了，但是当前并不关心！", service_name, host);
                     return;
                 }
 
@@ -165,6 +169,7 @@ namespace liren {
         std::string instance_to_service(const std::string& instance)
         {
             auto pos = instance.find_last_of('/');
+            if (pos == std::string::npos) return instance;
             return instance.substr(0, pos);
         }
     private:

@@ -24,7 +24,7 @@ namespace liren {
         std::stringstream ss;
         int ret = sw->write(val, &ss);
         if (ret != 0) {
-            std::cout << "Json 序列化失败！\n";
+            LOG_ERROR("Json 序列化失败！");
             return false;
         }
         dst = ss.str();
@@ -44,7 +44,7 @@ namespace liren {
         std::string err;
         bool ret = cr->parse(src.c_str(), src.c_str() + src.size(), &val, &err);
         if (ret == false) {
-            std::cout << "Json 反序列化失败: " << err << std::endl;
+            LOG_ERROR("Json 序列化失败：{}", err);
             return false;
         }
         return true;
