@@ -20,14 +20,18 @@ DEFINE_string(secret_key, "Y1gqrypoZHMWAoh6M20UH88wfbn89uRw", "语音平台加�
 
 int main(int argc, char *argv[])
 {
+    // 初始化日志
     google::ParseCommandLineFlags(&argc, &argv, true);
     liren::init_logger(FLAGS_run_mode, FLAGS_log_file, FLAGS_log_level);
 
+    // 创建语音服务对象
     liren::SpeechServerBuilder ssb;
     ssb.make_asr_object(FLAGS_app_id, FLAGS_api_key, FLAGS_secret_key);
     ssb.make_rpc_server(FLAGS_listen_port, FLAGS_rpc_timeout, FLAGS_rpc_threads);
     ssb.make_reg_object(FLAGS_registry_host, FLAGS_base_service + FLAGS_instance_name, FLAGS_access_host);
     auto server = ssb.build();
+
+    // 启动服务
     server->start();
     return 0;
 }
