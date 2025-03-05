@@ -7,11 +7,11 @@
 syntax = "proto3";
 package liren;
 import "base.proto";
-
 option cc_generic_services = true;
 
+// 获取单个文件
 message GetSingleFileReq {
-    string request_id = 1;
+    string request_id = 1; // 请求ID，作为处理流程唯一标识
     string file_id = 2;
     optional string user_id = 3;
     optional string session_id = 4;
@@ -23,6 +23,7 @@ message GetSingleFileRsp {
     optional FileDownloadData file_data = 4;
 }
 
+// 获取多个文件
 message GetMultiFileReq {
     string request_id = 1;
     optional string user_id = 2;
@@ -33,11 +34,12 @@ message GetMultiFileRsp {
     string request_id = 1;
     bool success = 2;
     string errmsg = 3; 
-    map<string, FileDownloadData> file_data = 4;//文件ID与文件数据的映射map
+    map<string, FileDownloadData> file_data = 4; // 文件ID与文件数据的映射map
 }
 
+// 上传单个文件
 message PutSingleFileReq {
-    string request_id = 1; //请求ID，作为处理流程唯一标识
+    string request_id = 1;  
     optional string user_id = 2;
     optional string session_id = 3;
     FileUploadData file_data = 4;
@@ -46,9 +48,10 @@ message PutSingleFileRsp {
     string request_id = 1;
     bool success = 2;
     string errmsg = 3;
-    FileMessageInfo file_info = 4; //返回了文件组织的元信息
+    FileMessageInfo file_info = 4; // 返回了文件组织的元信息
 }
 
+// 上传多个文件
 message PutMultiFileReq {
     string request_id = 1;
     optional string user_id = 2;
@@ -62,6 +65,7 @@ message PutMultiFileRsp {
     repeated FileMessageInfo file_info = 4;
 }
 
+// 定义文件操作服务，提供文件的上传和下载功能
 service FileService {
     rpc GetSingleFile(GetSingleFileReq) returns (GetSingleFileRsp);
     rpc GetMultiFile(GetMultiFileReq) returns (GetMultiFileRsp);

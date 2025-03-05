@@ -27,10 +27,10 @@ namespace liren {
         logger->set_pattern("[%n][%H:%M:%S][%t][%-8l]%v");
     }
 
-    #define LOG_TRACE(format, ...) logger->trace(std::string("[{}:{}] ") + format, __FILE__, __LINE__, ##__VA_ARGS__);
-    #define LOG_DEBUG(format, ...) logger->debug(std::string("[{}:{}] ") + format, __FILE__, __LINE__, ##__VA_ARGS__);
-    #define LOG_INFO(format, ...) logger->info(std::string("[{}:{}] ") + format, __FILE__, __LINE__, ##__VA_ARGS__);
-    #define LOG_WARN(format, ...) logger->warn(std::string("[{}:{}] ") + format, __FILE__, __LINE__, ##__VA_ARGS__);
-    #define LOG_ERROR(format, ...) logger->error(std::string("[{}:{}] ") + format, __FILE__, __LINE__, ##__VA_ARGS__);
-    #define LOG_CRITICAL(format, ...) logger->critical(std::string("[{}:{}] ") + format, __FILE__, __LINE__, ##__VA_ARGS__);
+    #define LOG_TRACE(format, ...) liren::logger->trace(std::string("[{}:{}] ") + format, __FILE__, __LINE__, ##__VA_ARGS__);
+    #define LOG_DEBUG(format, ...) liren::logger->debug(std::string("[{}:{}] ") + format, __FILE__, __LINE__, ##__VA_ARGS__);
+    #define LOG_INFO(format, ...) liren::logger->info(std::string("[{}:{}] ") + format, __FILE__, __LINE__, ##__VA_ARGS__);
+    #define LOG_WARN(format, ...) liren::logger->warn(std::string("[{}:{}] ") + format, __FILE__, __LINE__, ##__VA_ARGS__);
+    #define LOG_ERROR(format, ...) liren::logger->error(std::string("[{}:{}] ") + format, __FILE__, __LINE__, ##__VA_ARGS__);
+    #define LOG_CRITICAL(format, ...) liren::logger->critical(std::string("[{}:{}] ") + format, __FILE__, __LINE__, ##__VA_ARGS__);
 }
