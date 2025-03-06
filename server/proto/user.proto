@@ -15,8 +15,8 @@ message UserRegisterReq {
     string request_id = 1;
     string nickname = 2;
     string password = 3;
-    optional string verify_code_id = 4; //目前客户端实现了本地验证，该字段没用了
-    optional string verify_code = 5;//目前客户端实现了本地验证，该字段没用了
+    optional string verify_code_id = 4; // 目前客户端实现了本地验证，该字段没用了
+    optional string verify_code = 5;    // 目前客户端实现了本地验证，该字段没用了
 }
 message UserRegisterRsp {
     string request_id = 1;
@@ -38,6 +38,7 @@ message UserLoginRsp {
     string errmsg = 3;
     string login_session_id = 4;
 }
+
 //----------------------------
 //手机号验证码获取
 message PhoneVerifyCodeReq {
@@ -77,7 +78,8 @@ message PhoneLoginRsp {
     string errmsg = 3; 
     string login_session_id = 4;
 }
-//个人信息获取-这个只用于获取当前登录用户的信息
+
+//个人信息获取：这个只用于获取当前登录用户的信息
 //  客户端传递的时候只需要填充session_id即可
 //其他个人/好友信息的获取在好友操作中完成
 message GetUserInfoReq {
@@ -91,7 +93,8 @@ message GetUserInfoRsp {
     string errmsg = 3; 
     UserInfo user_info = 4;
 }
-//内部接口
+
+//内部接口（为了提高操作效率）
 message GetMultiUserInfoReq {
     string request_id = 1;
     repeated string users_id = 2;
@@ -102,6 +105,7 @@ message GetMultiUserInfoRsp {
     string errmsg = 3; 
     map<string, UserInfo> users_info = 4;
 }
+
 //----------------------------
 //用户头像修改 
 message SetUserAvatarReq {

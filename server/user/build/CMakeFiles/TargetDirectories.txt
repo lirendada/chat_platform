@@ -1,0 +1,8 @@
+/home/liren/chat_platform/server/user/build/CMakeFiles/user_server.dir
+/home/liren/chat_platform/server/user/build/CMakeFiles/user_client.dir
+/home/liren/chat_platform/server/user/build/CMakeFiles/edit_cache.dir
+/home/liren/chat_platform/server/user/build/CMakeFiles/rebuild_cache.dir
+/home/liren/chat_platform/server/user/build/CMakeFiles/list_install_components.dir
+/home/liren/chat_platform/server/user/build/CMakeFiles/install.dir
+/home/liren/chat_platform/server/user/build/CMakeFiles/install/local.dir
+/home/liren/chat_platform/server/user/build/CMakeFiles/install/strip.dir
