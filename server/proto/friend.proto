@@ -1,15 +1,11 @@
-/*
-    好友操作服务器的子服务注册信息： /service/friend/instance_id
-        服务名称：/service/friend
-        实例 ID: instance_id 每个能够提供用户操作服务的子服务器唯一 ID
-    当服务发现的时候，通过 /service/friend 进行服务发现，就可以发现所有的能够提供用户操作的实例信息了
-*/
 syntax = "proto3";
-package liren;
+package bite_im;
 import "base.proto";
+
 option cc_generic_services = true;
 
-// 好友列表获取
+//--------------------------------------
+//好友列表获取
 message GetFriendListReq {
     string request_id = 1;          // 请求标识ID
     optional string user_id = 2;    // 当前请求的发起者用户ID

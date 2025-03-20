@@ -1,11 +1,5 @@
-/*
-    用户操作服务器的子服务注册信息： /service/user/instance_id
-        服务名称：/service/user
-        实例 ID: instance_id 每个能够提供用户操作服务的子服务器唯一 ID
-    当服务发现的时候，通过 /service/user 进行服务发现，就可以发现所有的能够提供用户操作的实例信息了
-*/
 syntax = "proto3";
-package liren;
+package bite_im;
 import "base.proto";
 option cc_generic_services = true;
 
@@ -15,8 +9,8 @@ message UserRegisterReq {
     string request_id = 1;
     string nickname = 2;
     string password = 3;
-    optional string verify_code_id = 4; // 目前客户端实现了本地验证，该字段没用了
-    optional string verify_code = 5;    // 目前客户端实现了本地验证，该字段没用了
+    optional string verify_code_id = 4; //目前客户端实现了本地验证，该字段没用了
+    optional string verify_code = 5;//目前客户端实现了本地验证，该字段没用了
 }
 message UserRegisterRsp {
     string request_id = 1;
@@ -38,7 +32,6 @@ message UserLoginRsp {
     string errmsg = 3;
     string login_session_id = 4;
 }
-
 //----------------------------
 //手机号验证码获取
 message PhoneVerifyCodeReq {
@@ -78,8 +71,7 @@ message PhoneLoginRsp {
     string errmsg = 3; 
     string login_session_id = 4;
 }
-
-//个人信息获取：这个只用于获取当前登录用户的信息
+//个人信息获取-这个只用于获取当前登录用户的信息
 //  客户端传递的时候只需要填充session_id即可
 //其他个人/好友信息的获取在好友操作中完成
 message GetUserInfoReq {
@@ -93,8 +85,7 @@ message GetUserInfoRsp {
     string errmsg = 3; 
     UserInfo user_info = 4;
 }
-
-//内部接口（为了提高操作效率）
+//内部接口
 message GetMultiUserInfoReq {
     string request_id = 1;
     repeated string users_id = 2;
@@ -105,7 +96,6 @@ message GetMultiUserInfoRsp {
     string errmsg = 3; 
     map<string, UserInfo> users_info = 4;
 }
-
 //----------------------------
 //用户头像修改 
 message SetUserAvatarReq {

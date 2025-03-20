@@ -1,4 +1,4 @@
-// 主要实现语音识别子服务的服务器的搭建
+//主要实现语音识别子服务的服务器的搭建
 #include "speech_server.hpp"
 
 DEFINE_bool(run_mode, false, "程序的运行模式，false-调试； true-发布；");
@@ -14,24 +14,20 @@ DEFINE_int32(listen_port, 10001, "Rpc服务器监听端口");
 DEFINE_int32(rpc_timeout, -1, "Rpc调用超时时间");
 DEFINE_int32(rpc_threads, 1, "Rpc的IO线程数量");
 
-DEFINE_string(app_id, "117644864", "语音平台应用ID");
-DEFINE_string(api_key, "5Bt1BCHIJcJIO2AoMbBsSqC9", "语音平台API密钥");
-DEFINE_string(secret_key, "Y1gqrypoZHMWAoh6M20UH88wfbn89uRw", "语音平台加密密钥");
+DEFINE_string(app_id, "60694095", "语音平台应用ID");
+DEFINE_string(api_key, "PWn6zlsxym8VwpBW8Or4PPGe", "语音平台API密钥");
+DEFINE_string(secret_key, "Bl0mn74iyAkr3FzCo5TZV7lBq7NYoms9", "语音平台加密密钥");
 
 int main(int argc, char *argv[])
 {
-    // 初始化日志
     google::ParseCommandLineFlags(&argc, &argv, true);
-    liren::init_logger(FLAGS_run_mode, FLAGS_log_file, FLAGS_log_level);
+    bite_im::init_logger(FLAGS_run_mode, FLAGS_log_file, FLAGS_log_level);
 
-    // 创建语音服务对象
-    liren::SpeechServerBuilder ssb;
+    bite_im::SpeechServerBuilder ssb;
     ssb.make_asr_object(FLAGS_app_id, FLAGS_api_key, FLAGS_secret_key);
     ssb.make_rpc_server(FLAGS_listen_port, FLAGS_rpc_timeout, FLAGS_rpc_threads);
     ssb.make_reg_object(FLAGS_registry_host, FLAGS_base_service + FLAGS_instance_name, FLAGS_access_host);
     auto server = ssb.build();
-
-    // 启动服务
     server->start();
     return 0;
 }

@@ -9,7 +9,7 @@
 
 int main() {
     std::shared_ptr<odb::core::database> db(
-        new odb::mysql::database("root", "TThh1314520!", 
+        new odb::mysql::database("root", "123456", 
         "TestDB", "127.0.0.1", 0, 0, "utf8"));
     if (!db) { return -1; }
     ptime p = boost::posix_time::second_clock::local_time();

@@ -90,7 +90,9 @@
         "syncstream": "cpp",
         "valarray": "cpp",
         "*.ipp": "cpp",
-        "format": "cpp"
+        "format": "cpp",
+        "*.inc": "cpp",
+        "stdfloat": "cpp"
     },
     "cmake.sourceDirectory": "/home/liren/chat_platform/es/elasticlient/external/jsoncpp"
 }
